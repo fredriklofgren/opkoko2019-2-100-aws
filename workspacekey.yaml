@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'A Workspacekey for OpKoKo 2019.2'
+
+Resources:
+  WorkspaceKey:
+    Type: 'AWS::KMS::Key'
+    Properties:
+      Description: 'A key to encrypt AWS workspace resources'
+      Enabled: true
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: 'Allow admin access to root'
+            Effect: Allow
+            Principal:
+              AWS: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':root']]
+            Action:
+              - kms:*
+            Resource: '*'
+      KeyUsage: ENCRYPT_DECRYPT
+      PendingWindowInDays: 14

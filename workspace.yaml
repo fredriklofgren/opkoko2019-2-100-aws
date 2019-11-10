@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'A workspace for OpKoKo 2019.2'
+
+Parameters:
+  DirectoryId:
+    Type: String
+
+  UserName:
+    Type: String
+
+  WorkspaceKey:
+    Type: String
+
+Resources:
+  WorkSpace:
+    Type: 'AWS::WorkSpaces::Workspace'
+    Properties:
+      BundleId: 'wsb-8vbljg4r6'
+      DirectoryId: !Ref DirectoryId
+      RootVolumeEncryptionEnabled: true
+      UserName: !Ref UserName
+      UserVolumeEncryptionEnabled: true
+      VolumeEncryptionKey: !Ref WorkspaceKey
+      WorkspaceProperties:
+        ComputeTypeName: STANDARD
+        RootVolumeSizeGib: 50
+        RunningMode: AUTO_STOP
+        RunningModeAutoStopTimeoutInMinutes: 2
+        UserVolumeSizeGib: 80

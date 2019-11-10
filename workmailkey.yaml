@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'A workmail key for OpKoKo 2019.2'
+
+Resources:
+  WorkmailKey:
+    Type: 'AWS::KMS::Key'
+    Properties:
+      Description: 'A key to encrypt AWS workmail mails'
+      Enabled: true
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: 'Allow access through workmail'
+            Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - kms:Decrypt
+              - kms:CreateGrant
+              - kms:ReEncrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+            Resource: '*'
+            Condition:
+              StringEquals:
+                kms:ViaService: workmail.eu-west-1.amazonaws.com
+                kms:CallerAccount: !Ref 'AWS::AccountId'
+          - Sid: 'Allow admin access to root'
+            Effect: Allow
+            Principal:
+              AWS: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':root']]
+            Action:
+              - kms:*
+            Resource: '*'
+      KeyUsage: ENCRYPT_DECRYPT
+      PendingWindowInDays: 14

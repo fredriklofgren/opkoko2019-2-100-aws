@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'The basic Root User'
+
+Parameters:
+  StandardPassword:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: STANDARD_PASSWORD
+    NoEcho: true
+
+Resources:
+  AdminOne:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['', ['Alice', '-', !Ref 'AWS::Region']]
+      Path: /root/
+      LoginProfile:
+        Password: !Ref StandardPassword
+        PasswordResetRequired: false
+      Groups:
+        - !Ref Group
+
+  AdminTwo:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['', ['Bob', '-', !Ref 'AWS::Region']]
+      Path: /root/
+      LoginProfile:
+        Password: !Ref StandardPassword
+        PasswordResetRequired: false
+      Groups:
+        - !Ref Group
+
+  Group:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join ['-', ['RootAdmins', !Ref 'AWS::Region']]
+      Path: /root/
+      Policies:
+        - PolicyName: AllButRoot
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+              - Effect: Deny
+                Action: iam:DeleteUser
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:CreateAccessKey
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteAccessKey
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteGroup*
+                Resource: !Join ['', ['awn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteLoginProfile
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:DeletePolicy*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteRole*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteServiceLinkedRole
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteServiceSpecificCredential
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:DeleteUser*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:DetachGroupPolicy
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:DetachRolePolicy
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:DetachUserPolicy
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:PutGroupPolicy
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:PutRole*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:PutUser*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:RemoveUserFromGroup
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:ResetServiceSpecificCredential
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+              - Effect: Deny
+                Action: iam:UpdateAssumeRolePolicy
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:UpdateGroup
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+              - Effect: Deny
+                Action: iam:UpdateRole*
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+              - Effect: Deny
+                Action: iam:UpdateUser
+                Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]

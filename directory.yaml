@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'A Directory for OpKoKo 2019.2'
+
+Parameters:
+  DirectoryAdminPassword:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: STANDARD_PASSWORD
+
+Resources:
+  Directory:
+    Type: AWS::DirectoryService::SimpleAD
+    Properties:
+      CreateAlias: true
+      Description: 'A directory for OpKoKo 2019.2'
+      EnableSso: false
+      Name: 'dir.opkoko20192.name'
+      Password: !Ref DirectoryAdminPassword
+      ShortName: DIR
+      Size: Small
+      VpcSettings:
+        VpcId: !Ref DirectoryVPC
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
+
+  DirectoryVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      Tags:
+        - Key: 'Name'
+          Value: 'DirectoryVPC'
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: 'default'
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      Tags:
+        - Key: 'Name'
+          Value: 'priv-1'
+      CidrBlock: '10.0.0.0/20'
+      AvailabilityZone: !Join ['', [!Ref 'AWS::Region', 'a']]
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref DirectoryVPC
+
+  PrivateSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      Tags:
+        - Key: 'Name'
+          Value: 'priv-2'
+      CidrBlock: '10.0.16.0/20'
+      AvailabilityZone: !Join ['', [!Ref 'AWS::Region', 'b']]
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref DirectoryVPC

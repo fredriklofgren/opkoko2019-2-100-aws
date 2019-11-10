@@ -1,0 +1,313 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'The Root Users'
+
+Parameters:
+  StandardPassword:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: STANDARD_PASSWORD
+    NoEcho: true
+
+Resources:
+  AdminOne:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['', ['Alice', '-', !Ref 'AWS::Region']]
+      Path: /root/
+      LoginProfile:
+        Password: !Ref StandardPassword
+        PasswordResetRequired: false
+      Groups:
+        - !Ref Group
+      PermissionsBoundary: !Ref PermissionsBoundary
+
+  AdminTwo:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['', ['Bob', '-', !Ref 'AWS::Region']]
+      Path: /root/
+      LoginProfile:
+        Password: !Ref StandardPassword
+        PasswordResetRequired: false
+      Groups:
+        - !Ref Group
+      PermissionsBoundary: !Ref PermissionsBoundary
+
+  Group:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join ['-', ['RootAdmins', !Ref 'AWS::Region']]
+      Path: /root/
+      Policies:
+        - PolicyName: AllButIam
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                NotAction: 'iam:*'
+                Resource: '*'
+        - PolicyName: RaisinsOfIam
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: iam:ListPolicies
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:ListRoles
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:ListUsers
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:GetUser
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:GetRole
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:CreateLoginProfile
+                Resource: '*'
+        - PolicyName: MustForwarPermissionsBoundary
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: iam:AttachUserPolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:AttachRolePolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:CreateRole
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:CreateUser
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Deny
+                Action: iam:DeleteRolePermissionsBoundary
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:DeleteRolePolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Deny
+                Action: iam:DeleteUserPermissionsBoundary
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:DeleteUserPolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Deny
+                Action: iam:DetachRolePolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Deny
+                Action: iam:DetachUserPolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:PutRolePolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+              - Effect: Allow
+                Action: iam:PutUserPolicy
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref PermissionsBoundary
+
+  PermissionsBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DenyRootEdits
+      Path: /root/
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            NotAction: 'iam:*'
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:ListPolicies
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:ListRoles
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:ListUsers
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:GetUser
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:GetRole
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:CreateLoginProfile
+            Resource: '*'
+          - Effect: Deny
+            Action: iam:DeleteUser
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:CreateAccessKey
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteAccessKey
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteGroup*
+            Resource: !Join ['', ['awn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteLoginProfile
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:DeletePolicy*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteRole*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteServiceLinkedRole
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteServiceSpecificCredential
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:DeleteUser*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:DetachGroupPolicy
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:DetachRolePolicy
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:DetachUserPolicy
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:PutGroupPolicy
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:PutRole*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:PutUser*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:RemoveUserFromGroup
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:ResetServiceSpecificCredential
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Deny
+            Action: iam:UpdateAssumeRolePolicy
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:UpdateGroup
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':group/root/*']]
+          - Effect: Deny
+            Action: iam:UpdateRole*
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/root/*']]
+          - Effect: Deny
+            Action: iam:UpdateUser
+            Resource: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/root/*']]
+          - Effect: Allow
+            Action: iam:AttachUserPolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:AttachRolePolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:CreateRole
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:CreateUser
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Deny
+            Action: iam:DeleteRolePermissionsBoundary
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:DeleteRolePolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Deny
+            Action: iam:DeleteUserPermissionsBoundary
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:DeleteUserPolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Deny
+            Action: iam:DetachRolePolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Deny
+            Action: iam:DetachUserPolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:PutRolePolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
+          - Effect: Allow
+            Action: iam:PutUserPolicy
+            Resource: '*'
+            Condition:
+              StringEquals:
+                iam:PermissionsBoundary: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/root/', DenyRootEdits]]
